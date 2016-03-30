@@ -14,6 +14,7 @@
 		E91CB4B01CAB7640004AC11B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E91CB4AE1CAB7640004AC11B /* LaunchScreen.storyboard */; };
 		E91CB4BB1CAB7640004AC11B /* Transform_AnimationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91CB4BA1CAB7640004AC11B /* Transform_AnimationTests.swift */; };
 		E91CB4C61CAB7640004AC11B /* Transform_AnimationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91CB4C51CAB7640004AC11B /* Transform_AnimationUITests.swift */; };
+		E91CB4D41CAB7930004AC11B /* TransformUltility.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91CB4D31CAB7930004AC11B /* TransformUltility.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +48,7 @@
 		E91CB4C11CAB7640004AC11B /* Transform-AnimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Transform-AnimationUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E91CB4C51CAB7640004AC11B /* Transform_AnimationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transform_AnimationUITests.swift; sourceTree = "<group>"; };
 		E91CB4C71CAB7640004AC11B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E91CB4D31CAB7930004AC11B /* TransformUltility.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformUltility.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +105,7 @@
 				E91CB4AC1CAB7640004AC11B /* Assets.xcassets */,
 				E91CB4AE1CAB7640004AC11B /* LaunchScreen.storyboard */,
 				E91CB4B11CAB7640004AC11B /* Info.plist */,
+				E91CB4D31CAB7930004AC11B /* TransformUltility.swift */,
 			);
 			path = "Transform-Animation";
 			sourceTree = "<group>";
@@ -258,6 +261,7 @@
 			files = (
 				E91CB4A81CAB7640004AC11B /* ViewController.swift in Sources */,
 				E91CB4A61CAB7640004AC11B /* AppDelegate.swift in Sources */,
+				E91CB4D41CAB7930004AC11B /* TransformUltility.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
