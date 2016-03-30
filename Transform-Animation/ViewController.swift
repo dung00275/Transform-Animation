@@ -25,7 +25,14 @@ class ViewController: UIViewController {
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        viewTransform.runAnimationAuto()
+//        viewTransform.runAnimationAuto {
+//            print("Animation Complete!!!")
+//        }
+        
+        let obj = CollectAnimationWorker(arrayViewTransform: [viewTransform])
+        obj.runAnimationAuto { 
+            print("Animation Complete!!!")
+        }
     }
 
     @IBAction func didChangeSlider(sender: UISlider) {

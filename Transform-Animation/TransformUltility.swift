@@ -17,7 +17,7 @@ protocol Transform {
     func transformToPercent(percent:CGFloat)
     
     // -- Implement Run Auto
-    func runAnimationAuto()
+    func runAnimationAuto(completion:(()->())?)
 }
 
 let rangeDuration:CGFloat = 0.01
@@ -26,6 +26,7 @@ let rangeDuration:CGFloat = 0.01
 class TransfromView: UIView,Transform {
     typealias Object = UIView
     
+    private var completionAuto:(()->())?
     //Scale
     @IBInspectable var minScale:CGFloat = 1
     @IBInspectable var maxScale:CGFloat = 1
@@ -66,6 +67,21 @@ class TransfromView: UIView,Transform {
         }
     }
     
+    @IBInspectable var AnimationScale:Int = 0
+    @IBInspectable var AnimationTranslate:Int = 0
+    @IBInspectable var AnimationRotate:Int = 0
+    
+    // Begin
+    @IBInspectable var BeginScale:CGFloat = 0
+    @IBInspectable var BeginTranslation:CGFloat = 0
+    @IBInspectable var BeginRotate:CGFloat = 0
+    
+    // End
+    @IBInspectable var EndScale:CGFloat = 0
+    @IBInspectable var EndTranslation:CGFloat = 0
+    @IBInspectable var EndRotate:CGFloat = 0
+    
+    
     private var deltaScale:CGFloat {
         return maxScale - minScale
     }
@@ -76,6 +92,9 @@ class TransfromView: UIView,Transform {
     
     private var currentPercent:CGFloat = 0
     private var timer:NSTimer?
+
+    
+    private var currentScale:CGFloat = 0
     
     // Draw live ---- Designable
     override func prepareForInterfaceBuilder() {
@@ -95,7 +114,7 @@ class TransfromView: UIView,Transform {
         centerPoint.y -= yTranslation
         
         self.center = centerPoint
-        
+        print("first center : \(self.center)")
     }
     
     // MARK: --- Memory Management
@@ -103,18 +122,110 @@ class TransfromView: UIView,Transform {
         print("\(#function) class:\(self.dynamicType)")
         self.timer?.invalidate()
         self.timer = nil
+        self.completionAuto = nil
     }
+    
+    // MARK: --- Custom Transform 
+    func transformScale(percent:CGFloat) -> CGAffineTransform {
+        
+        let transform = self.transform
+        let rotation = Float(atan2(Double(transform.b), Double(transform.a)))
+        
+        let translationTransform = CGAffineTransformMakeTranslation(transform.tx, transform.ty)
+        let rotnTransform = CGAffineTransformRotate(translationTransform,CGFloat(rotation))
+        currentScale = minScale + deltaScale * percent
+        let scaleTransform = CGAffineTransformScale(rotnTransform,currentScale,currentScale)
+        
+        
+        return scaleTransform
+    }
+    
+    func transformTranslate(percent:CGFloat) -> CGAffineTransform {
+        
+        var transform = self.transform
+        
+        transform.tx = xTranslation * percent
+        transform.ty = yTranslation * percent
+        
+        return transform
+    }
+    
+    func transformRotate(percent:CGFloat) -> CGAffineTransform {
+        let transform = self.transform
+        let translationTransform = CGAffineTransformMakeTranslation(transform.tx, transform.ty)
+        let scaleTransform = CGAffineTransformScale(translationTransform, currentScale, currentScale)
+        
+        return CGAffineTransformRotate(scaleTransform,minAngle + deltaAngle * percent)
+    }
+    
+    func checkAnimation(index:Int,percent:CGFloat) -> (Int,CGAffineTransform)? {
+        
+        switch index {
+        case AnimationScale:
+             print("//////Index : \(index)  Scale //////")
+            let range = 0...EndScale
+            if range ~= percent{
+                return (index,transformScale((percent - BeginScale) / (EndScale - BeginScale)))
+            }
+        case AnimationTranslate:
+            print("////// Index : \(index) Translate //////")
+            let range = 0...EndTranslation
+            if range ~= percent{
+                return (index,transformTranslate((percent - BeginTranslation) / (EndTranslation - BeginTranslation)))
+            }
+        case AnimationRotate:
+            print("////// Index : \(index) Rotate //////")
+            let range = 0...EndRotate
+            if range ~= percent{
+                return (index,transformRotate((percent - BeginRotate) / (EndRotate - BeginRotate) ))
+            }
+        default:
+            break
+        }
+        
+        return nil
+    }
+    
+    
     
     // MARK: --- Handle Percent
     func transformToPercent(percent: CGFloat) {
-        self.transform = constructTransform(percent)
-        self.alpha = 1 * percent
+        //self.alpha = 1 * percent
+        defer{
+            currentPercent = percent
+        }
+        if  EndRotate == EndTranslation && EndTranslation == EndScale {
+            self.transform = constructTransform(percent)
+        }else
+        {
+            if let value = checkAnimation(1, percent: percent)
+            {
+                
+                self.transform = value.1
+                return
+            }
+            
+            if let value = checkAnimation(2, percent: percent)
+            {
+                
+                self.transform = value.1
+                return
+            }
+            
+            if let value = checkAnimation(3, percent: percent)
+            {
+                
+                self.transform = value.1
+                return
+            }
+        }
     }
 }
 
 // MARK: --- Run Animation Automatically
 extension TransfromView{
-    func runAnimationAuto() {
+    func runAnimationAuto(completion:(()->())?) {
+        self.completionAuto = completion
         guard duration > 0 else{
             transformToPercent(1)
             return
@@ -130,6 +241,7 @@ extension TransfromView{
             self.currentPercent = 0
             self.timer?.invalidate()
             self.timer = nil
+            completionAuto?()
             return
         }
         
@@ -141,7 +253,7 @@ extension TransfromView{
 // MARK: --- Setup Default
 private extension TransfromView{
     func setup(){
-        self.alpha = 0
+        self.currentScale = minScale
         self.transform = constructTransform(0)
     }
     
@@ -153,3 +265,54 @@ private extension TransfromView{
         return rotateTransform
     }
 }
+
+// MARK: ---- Object Call All Animation In View
+
+class CollectAnimationWorker:Transform
+{
+    typealias Object = [TransfromView]
+    
+    var arrayViewAnimation:Object
+    var duration:CGFloat
+    private var timer:NSTimer?
+    
+    private var completionAuto:(()->())?
+    init(arrayViewTransform:Object)
+    {
+        self.arrayViewAnimation = arrayViewTransform
+        duration = 0
+        for view in self.arrayViewAnimation {
+            duration += view.duration
+        }
+        
+    }
+    
+    func transformToPercent(percent: CGFloat) {
+        for view in self.arrayViewAnimation {
+            view.transformToPercent(percent)
+        }
+    }
+    func runAnimationAuto(completion: (() -> ())?) {
+        completionAuto = completion
+        for view in self.arrayViewAnimation {
+            duration += view.duration
+            view.runAnimationAuto(nil)
+        }
+        timer = NSTimer.scheduledTimerWithTimeInterval(Double(duration), target: self, selector: #selector(runtimer), userInfo: nil, repeats: false)
+    }
+    
+    @objc func runtimer(){
+        self.timer?.invalidate()
+        self.timer = nil
+    }
+    
+    deinit{
+        print("\(#function) class:\(self.dynamicType)")
+        self.timer?.invalidate()
+        self.timer = nil
+        self.completionAuto = nil
+    }
+    
+    
+}
+
