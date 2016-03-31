@@ -163,22 +163,16 @@ class TransfromView: UIView,Transform {
         switch index {
         case AnimationScale:
              print("//////Index : \(index)  Scale //////")
-            let range = 0...EndScale
-            if range ~= percent{
-                return (index,transformScale((percent - BeginScale) / (EndScale - BeginScale)))
-            }
+            let range = BeginScale...EndScale
+            return range ~= percent ? (index,transformScale((percent - BeginScale) / (EndScale - BeginScale))) : nil
         case AnimationTranslate:
             print("////// Index : \(index) Translate //////")
-            let range = 0...EndTranslation
-            if range ~= percent{
-                return (index,transformTranslate((percent - BeginTranslation) / (EndTranslation - BeginTranslation)))
-            }
+            let range = BeginTranslation...EndTranslation
+            return range ~= percent ? (index,transformTranslate((percent - BeginTranslation) / (EndScale - BeginTranslation))) : nil
         case AnimationRotate:
             print("////// Index : \(index) Rotate //////")
-            let range = 0...EndRotate
-            if range ~= percent{
-                return (index,transformRotate((percent - BeginRotate) / (EndRotate - BeginRotate) ))
-            }
+            let range = BeginRotate...EndRotate
+            return range ~= percent ? (index,transformRotate((percent - BeginRotate) / (EndRotate - BeginRotate) )) : nil
         default:
             break
         }
@@ -191,6 +185,7 @@ class TransfromView: UIView,Transform {
     // MARK: --- Handle Percent
     func transformToPercent(percent: CGFloat) {
         //self.alpha = 1 * percent
+        print(" current percent :\(percent * 100) %")
         defer{
             currentPercent = percent
         }
@@ -200,23 +195,16 @@ class TransfromView: UIView,Transform {
         {
             if let value = checkAnimation(1, percent: percent)
             {
-                
                 self.transform = value.1
-                return
+            }
+            else if let value = checkAnimation(2, percent: percent)
+            {
+                self.transform = value.1
             }
             
-            if let value = checkAnimation(2, percent: percent)
+            else if let value = checkAnimation(3, percent: percent)
             {
-                
                 self.transform = value.1
-                return
-            }
-            
-            if let value = checkAnimation(3, percent: percent)
-            {
-                
-                self.transform = value.1
-                return
             }
         }
     }
@@ -226,6 +214,7 @@ class TransfromView: UIView,Transform {
 extension TransfromView{
     func runAnimationAuto(completion:(()->())?) {
         self.completionAuto = completion
+        self.currentPercent = 0
         guard duration > 0 else{
             transformToPercent(1)
             return
@@ -238,7 +227,6 @@ extension TransfromView{
     func runTimer(){
         
         guard  currentPercent < 1 else{
-            self.currentPercent = 0
             self.timer?.invalidate()
             self.timer = nil
             completionAuto?()
@@ -282,7 +270,7 @@ class CollectAnimationWorker:Transform
         self.arrayViewAnimation = arrayViewTransform
         duration = 0
         for view in self.arrayViewAnimation {
-            duration += view.duration
+            duration = max(duration, view.duration)
         }
         
     }
@@ -295,7 +283,6 @@ class CollectAnimationWorker:Transform
     func runAnimationAuto(completion: (() -> ())?) {
         completionAuto = completion
         for view in self.arrayViewAnimation {
-            duration += view.duration
             view.runAnimationAuto(nil)
         }
         timer = NSTimer.scheduledTimerWithTimeInterval(Double(duration), target: self, selector: #selector(runtimer), userInfo: nil, repeats: false)
