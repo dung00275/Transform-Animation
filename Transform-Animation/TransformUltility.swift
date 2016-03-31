@@ -277,8 +277,8 @@ class CollectAnimationWorker:Transform
 {
     typealias Object = [TransfromView]
     
-    var arrayViewAnimation:Object
-    var duration:CGFloat
+    private(set) var arrayViewAnimation:Object
+    private(set) var duration:CGFloat
     
     // MARK: - Init
     init(arrayViewTransform:Object)
