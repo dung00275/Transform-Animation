@@ -20,6 +20,7 @@ protocol Transform {
     func runAnimationAuto(completion:(()->())?)
 }
 
+// MARK: ---- Core Class
 let rangeDuration:CGFloat = 0.01
 
 @IBDesignable
@@ -27,22 +28,22 @@ class TransfromView: UIView,Transform {
     typealias Object = UIView
     
     private var completionAuto:(()->())?
-    //Scale
+    // MARK: - Scale
     @IBInspectable var minScale:CGFloat = 1
     @IBInspectable var maxScale:CGFloat = 1
     
-    //Move
+    // MARK: - Move
     @IBInspectable var xTranslation:CGFloat = 0
     @IBInspectable var yTranslation:CGFloat = 0
     
-    //Rotate
+    // MARK: - Rotate
     @IBInspectable var minAngle:CGFloat = 0
     @IBInspectable var maxAngle:CGFloat = 0
     
-    // Duration
+    // MARK: - Duration
     @IBInspectable var duration:CGFloat = 0
     
-    // View Ultility
+    // MARK: - View Ultility
     @IBInspectable var maskToBounds:Bool = false{
         didSet{
             self.layer.masksToBounds = maskToBounds
@@ -67,6 +68,9 @@ class TransfromView: UIView,Transform {
         }
     }
     
+    @IBInspectable var needFadeIn:Bool = false
+    
+    // MARK: - Custom Animation
     @IBInspectable var AnimationScale:Int = 0
     @IBInspectable var AnimationTranslate:Int = 0
     @IBInspectable var AnimationRotate:Int = 0
@@ -81,7 +85,7 @@ class TransfromView: UIView,Transform {
     @IBInspectable var EndTranslation:CGFloat = 0
     @IBInspectable var EndRotate:CGFloat = 0
     
-    
+    // MARK: - Private To Calculate
     private var deltaScale:CGFloat {
         return maxScale - minScale
     }
@@ -96,11 +100,11 @@ class TransfromView: UIView,Transform {
     
     private var currentScale:CGFloat = 0
     
+    // MARK: - Base Function
     // Draw live ---- Designable
     override func prepareForInterfaceBuilder() {
         super.prepareForInterfaceBuilder()
     }
-    
     
     override func awakeFromNib() {
         setup()
@@ -188,6 +192,9 @@ class TransfromView: UIView,Transform {
         print(" current percent :\(percent * 100) %")
         defer{
             currentPercent = percent
+            if needFadeIn {
+                self.alpha = 1 * percent
+            }
         }
         if  EndRotate == EndTranslation && EndTranslation == EndScale {
             self.transform = constructTransform(percent)
@@ -241,6 +248,9 @@ extension TransfromView{
 // MARK: --- Setup Default
 private extension TransfromView{
     func setup(){
+        if needFadeIn {
+            self.alpha = 0
+        }
         self.currentScale = minScale
         self.transform = constructTransform(0)
     }
@@ -254,17 +264,26 @@ private extension TransfromView{
     }
 }
 
-// MARK: ---- Object Call All Animation In View
+// MARK: -
 
+// MARK: ---- Object Call All Animation In View
+/*
+ How to use:
+ - Init with all class TransformView in your view
+ - After you can use function in Transform Protocol to run Animation
+
+ */
 class CollectAnimationWorker:Transform
 {
     typealias Object = [TransfromView]
     
     var arrayViewAnimation:Object
     var duration:CGFloat
-    private var timer:NSTimer?
     
+    private var timer:NSTimer?
     private var completionAuto:(()->())?
+    
+    // MARK: - Init
     init(arrayViewTransform:Object)
     {
         self.arrayViewAnimation = arrayViewTransform
@@ -272,9 +291,10 @@ class CollectAnimationWorker:Transform
         for view in self.arrayViewAnimation {
             duration = max(duration, view.duration)
         }
-        
+        duration += 0.02 * CGFloat(self.arrayViewAnimation.count)
     }
     
+    // MARK: - Protocol Implement
     func transformToPercent(percent: CGFloat) {
         for view in self.arrayViewAnimation {
             view.transformToPercent(percent)
@@ -291,8 +311,9 @@ class CollectAnimationWorker:Transform
     @objc func runtimer(){
         self.timer?.invalidate()
         self.timer = nil
+        self.completionAuto?()
     }
-    
+    // MARK: - Memory Management
     deinit{
         print("\(#function) class:\(self.dynamicType)")
         self.timer?.invalidate()
