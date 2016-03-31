@@ -280,9 +280,6 @@ class CollectAnimationWorker:Transform
     var arrayViewAnimation:Object
     var duration:CGFloat
     
-    private var timer:NSTimer?
-    private var completionAuto:(()->())?
-    
     // MARK: - Init
     init(arrayViewTransform:Object)
     {
@@ -291,7 +288,6 @@ class CollectAnimationWorker:Transform
         for view in self.arrayViewAnimation {
             duration = max(duration, view.duration)
         }
-        duration += 0.02 * CGFloat(self.arrayViewAnimation.count)
     }
     
     // MARK: - Protocol Implement
@@ -301,24 +297,19 @@ class CollectAnimationWorker:Transform
         }
     }
     func runAnimationAuto(completion: (() -> ())?) {
-        completionAuto = completion
-        for view in self.arrayViewAnimation {
-            view.runAnimationAuto(nil)
+        var alreadySet = false
+        self.arrayViewAnimation.forEach{
+            if $0.duration == self.duration && !alreadySet{
+                alreadySet = true
+                $0.runAnimationAuto(completion)
+            }else{
+                $0.runAnimationAuto(nil)
+            }
         }
-        timer = NSTimer.scheduledTimerWithTimeInterval(Double(duration), target: self, selector: #selector(runtimer), userInfo: nil, repeats: false)
-    }
-    
-    @objc func runtimer(){
-        self.timer?.invalidate()
-        self.timer = nil
-        self.completionAuto?()
     }
     // MARK: - Memory Management
     deinit{
         print("\(#function) class:\(self.dynamicType)")
-        self.timer?.invalidate()
-        self.timer = nil
-        self.completionAuto = nil
     }
     
     
