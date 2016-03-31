@@ -228,6 +228,7 @@ extension TransfromView{
         }
         
         self.timer = NSTimer.scheduledTimerWithTimeInterval(Double(rangeDuration), target: self, selector: #selector(runTimer), userInfo: nil, repeats: true)
+        NSRunLoop.currentRunLoop().addTimer(self.timer!, forMode: NSRunLoopCommonModes)
     }
     
     
@@ -269,7 +270,7 @@ private extension TransfromView{
 // MARK: ---- Object Call All Animation In View
 /*
  How to use:
- - Init with all class TransformView in your view
+ - Init with all TransformView in your view
  - After you can use function in Transform Protocol to run Animation
 
  */
